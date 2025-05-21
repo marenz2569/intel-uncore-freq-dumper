@@ -34,7 +34,7 @@ void UncoreFrequencyReader::threadFunction(const std::chrono::milliseconds Sleep
       static_cast<double>(Pcm.getNumOnlineSockets()) / static_cast<double>(Pcm.getNumOnlineCores());
 
   // Set the size of the values vector to the number of sockets.
-  ReadValues.reserve(NumSockets);
+  ReadValues.resize(NumSockets);
 
   std::vector<pcm::ServerUncoreCounterState> BeforeState(NumSockets);
   std::vector<pcm::ServerUncoreCounterState> AfterState(NumSockets);
@@ -67,8 +67,7 @@ auto UncoreFrequencyReader::getSummary(const std::chrono::high_resolution_clock:
 
   auto FindAll = [&StartTime, &StopTime](auto const& Tv) { return StartTime <= Tv.Time && Tv.Time <= StopTime; };
 
-  decltype(ReadValues) CroppedValues;
-  CroppedValues.reserve(ReadValues.size());
+  decltype(ReadValues) CroppedValues(ReadValues.size());
 
   {
     const std::lock_guard Lk(ReadValuesMutex);
@@ -81,7 +80,7 @@ auto UncoreFrequencyReader::getSummary(const std::chrono::high_resolution_clock:
   MetricType Metric{};
   Metric.Absolute = 1;
 
-  for (auto I = 0; I < ReadValues.size(); I++) {
+  for (auto I = 0; I < CroppedValues.size(); I++) {
     Summaries[I] = firestarter::measurement::Summary::calculate(CroppedValues[I].begin(), CroppedValues[I].end(),
                                                                 /*MetricType=*/Metric, /*NumThreads=*/0);
   }
