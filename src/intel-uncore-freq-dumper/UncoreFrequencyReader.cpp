@@ -69,7 +69,7 @@ auto UncoreFrequencyReader::getSummary(const std::chrono::high_resolution_clock:
 
   auto FindAll = [&StartTime, &StopTime](auto const& Tv) { return StartTime <= Tv.Time && Tv.Time <= StopTime; };
 
-  decltype(ReadValues) CroppedValues;
+  decltype(ReadValues) CroppedValues(ReadValues.size());
 
   {
     const std::lock_guard Lk(ReadValuesMutex);
