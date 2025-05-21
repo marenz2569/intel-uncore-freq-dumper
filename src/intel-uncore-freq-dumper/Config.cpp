@@ -16,13 +16,13 @@ Config::Config(int Argc, const char** Argv)
 
   // clang-format off
   Parser.add_options()
-    ("measurement-duration", "Duration of the uncore frequency measurement in milliseconds, default: 10000",
+    ("measurement-duration", "Duration of the uncore frequency measurement in milliseconds",
       cxxopts::value<unsigned>()->default_value("10000"))
-    ("measurement-interval", "Interval of measurements in milliseconds, default: 100",
-      cxxopts::value<unsigned>()->default_value("100"))
-    ("start-delta", "Cut of first N milliseconds of measurement, default: 5000",
+    ("measurement-interval", "Interval of measurements in milliseconds",
+      cxxopts::value<unsigned>()->default_value("10"))
+    ("start-delta", "Cut of first N milliseconds of measurement",
       cxxopts::value<unsigned>()->default_value("5000"), "N")
-    ("stop-delta", "Cut of last N milliseconds of measurement, default: 2000",
+    ("stop-delta", "Cut of last N milliseconds of measurement",
       cxxopts::value<unsigned>()->default_value("2000"), "N")
     ("outfile", "The path where the results should be saved to.", cxxopts::value<std::string>()->default_value("outfile.csv"))
   ;
