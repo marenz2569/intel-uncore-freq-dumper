@@ -29,7 +29,7 @@ def split_in_chunks(chunk_size: int, input: typing.List[Path]) -> typing.List[ty
 
 # Run clang-tidy on a set of input files and return the stdout
 def run_clang_tidy(files: typing.List[Path], project_root_path: Path, build_root_path: Path, clang_tidy_file_path: Path) -> bytes:
-    command_args = ['clang-tidy', '-extra-arg=-std=c++17', f'-p={build_root_path}', f'--config-file={clang_tidy_file_path}', '--format-style=file']
+    command_args = ['clang-tidy', '-extra-arg=-std=c++20', f'-p={build_root_path}', f'--config-file={clang_tidy_file_path}', '--format-style=file']
     command_args += files
     print(f'Starting {command_args}')
     p = subprocess.Popen(command_args, stdout=subprocess.PIPE, cwd=project_root_path)

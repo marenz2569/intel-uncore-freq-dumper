@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 #include <cxxopts.hpp>
-#include <firestarter/Config/CpuBind.hpp>
+#include <exception>
 #include <iostream>
 
 namespace intel_uncore_freq_dumper {

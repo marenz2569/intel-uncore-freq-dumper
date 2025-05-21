@@ -1,12 +1,19 @@
 #include "intel-uncore-freq-dumper/Config.hpp"
 #include "intel-uncore-freq-dumper/UncoreFrequencyReader.hpp"
 
+#include <chrono>
+#include <cstdlib>
+#include <exception>
+#include <fstream>
+#include <iostream>
+#include <thread>
+
 auto main(int Argc, const char** Argv) -> int {
   std::cout << "intel-uncore-freq-dumper. Version " << _INTEL_UNCORE_FREQ_DUMPER_VERSION_STRING << "\n"
             << "Copyright (C) " << _INTEL_UNCORE_FREQ_DUMPER_BUILD_YEAR << " Markus Schmidl" << "\n";
 
   try {
-    intel_uncore_freq_dumper::Config Cfg{Argc, Argv};
+    const intel_uncore_freq_dumper::Config Cfg{Argc, Argv};
 
     intel_uncore_freq_dumper::UncoreFrequencyReader Reader(Cfg.MeasurementInterval);
 

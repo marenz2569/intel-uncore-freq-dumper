@@ -1,8 +1,18 @@
 #include "intel-uncore-freq-dumper/UncoreFrequencyReader.hpp"
-#include "firestarter/Measurement/Summary.hpp"
 
+#include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <cpucounters.h>
-#include <types.h>
+#include <firestarter/Measurement/MetricInterface.h>
+#include <firestarter/Measurement/Summary.hpp>
+#include <firestarter/Measurement/TimeValue.hpp>
+#include <functional>
+#include <iterator>
+#include <mutex>
+#include <thread>
+#include <utility>
+#include <vector>
 
 namespace intel_uncore_freq_dumper {
 
@@ -43,7 +53,7 @@ void UncoreFrequencyReader::threadFunction(const std::chrono::milliseconds Sleep
 
   readServerUncoreCounterState(Pcm, BeforeState);
 
-  while (!StopThread) {
+  while (!StopThread.load()) {
     std::this_thread::sleep_for(SleepTime);
 
     readServerUncoreCounterState(Pcm, AfterState);

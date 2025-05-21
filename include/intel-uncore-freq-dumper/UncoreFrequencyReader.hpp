@@ -1,6 +1,7 @@
 #pragma once
 
 #include "firestarter/Measurement/Summary.hpp"
+#include <atomic>
 #include <chrono>
 #include <cpucounters.h>
 #include <firestarter/Measurement/TimeValue.hpp>
