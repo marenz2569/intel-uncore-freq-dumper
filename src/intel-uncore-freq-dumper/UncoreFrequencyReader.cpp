@@ -28,6 +28,8 @@ void UncoreFrequencyReader::threadFunction(const std::chrono::milliseconds Sleep
                                            std::vector<std::vector<firestarter::measurement::TimeValue>>& ReadValues,
                                            std::mutex& ReadValuesMutex, std::atomic<bool>& StopThread) {
   auto& Pcm = *pcm::PCM::getInstance();
+  // Programm the counters
+  Pcm.checkError(Pcm.program());
 
   const auto NumSockets = Pcm.getNumSockets();
   const auto UncoreFreqFactor =
