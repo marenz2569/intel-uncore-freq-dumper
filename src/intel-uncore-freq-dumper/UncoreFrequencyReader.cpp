@@ -69,7 +69,7 @@ auto UncoreFrequencyReader::getSummary(const std::chrono::high_resolution_clock:
 
   auto FindAll = [&StartTime, &StopTime](auto const& Tv) { return StartTime <= Tv.Time && Tv.Time <= StopTime; };
 
-  decltype(ReadValues) CroppedValues(ReadValues.size());
+  decltype(ReadValues) CroppedValues;
 
   {
     const std::lock_guard Lk(ReadValuesMutex);
@@ -82,9 +82,9 @@ auto UncoreFrequencyReader::getSummary(const std::chrono::high_resolution_clock:
   MetricType Metric{};
   Metric.Absolute = 1;
 
-  for (auto I = 0; I < CroppedValues.size(); I++) {
-    Summaries[I] = firestarter::measurement::Summary::calculate(CroppedValues[I].begin(), CroppedValues[I].end(),
-                                                                /*MetricType=*/Metric, /*NumThreads=*/0);
+  for (auto& CroppedValue : CroppedValues) {
+    Summaries.emplace_back(firestarter::measurement::Summary::calculate(CroppedValue.begin(), CroppedValue.end(),
+                                                                        /*MetricType=*/Metric, /*NumThreads=*/0));
   }
 
   return Summaries;
