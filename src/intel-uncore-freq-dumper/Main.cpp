@@ -1,5 +1,6 @@
 #include "intel-uncore-freq-dumper/Config.hpp"
 #include "intel-uncore-freq-dumper/UncoreFrequencyReader.hpp"
+#include "intel-uncore-freq-dumper/UncoreFrequencyReaderPcmFunction.hpp"
 
 #include <chrono>
 #include <cstdlib>
@@ -15,7 +16,7 @@ auto main(int Argc, const char** Argv) -> int {
   try {
     const intel_uncore_freq_dumper::Config Cfg{Argc, Argv};
 
-    intel_uncore_freq_dumper::UncoreFrequencyReader Reader(Cfg.MeasurementInterval);
+    intel_uncore_freq_dumper::UncoreFrequencyPcmReader Reader(Cfg.MeasurementInterval);
 
     // Wait for the measurement to finish
     auto StartTime = std::chrono::high_resolution_clock::now();

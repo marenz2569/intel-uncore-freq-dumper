@@ -1,6 +1,7 @@
 #pragma once
 
 #include "firestarter/Measurement/Summary.hpp"
+#include "intel-uncore-freq-dumper/UncoreFrequencyReaderPcmFunction.hpp"
 #include <atomic>
 #include <chrono>
 #include <cpucounters.h>
@@ -11,38 +12,54 @@ namespace intel_uncore_freq_dumper {
 
 /// This class wrapps Intel PCM, reads the uncore frequency after a specifed number of milliseconds and saves them to a
 /// nice datastructure.
-class UncoreFrequencyReader {
+template <class ReaderFunction> class UncoreFrequencyReader {
 public:
   UncoreFrequencyReader() = delete;
 
   /// Start the uncore frequency reader.
   /// \arg SleepTime Read the frequency MSR counter every specified seconds.
-  explicit UncoreFrequencyReader(std::chrono::milliseconds SleepTime);
+  explicit UncoreFrequencyReader(std::chrono::milliseconds SleepTime) {
+    // Start the reader thread
+    ReaderThread = std::thread(ReaderFunction::threadFunction, SleepTime, std::ref(ReadValues),
+                               std::ref(ReadValuesMutex), std::ref(StopThread));
+  }
 
-  ~UncoreFrequencyReader();
-
-  /// Read the uncore counter state from PCM and save it to ReadVal
-  /// \arg Pcm The PCM instance
-  /// \arg ReadVal The vector in which to save the read uncore counter values.
-  static void readServerUncoreCounterState(pcm::PCM& Pcm, std::vector<pcm::ServerUncoreCounterState>& ReadVal);
-
-  /// The thread function that periodically read the uncore counters and save the uncore frequency to the ReadValues
-  /// vector.
-  /// \arg SleepTime Read the frequency MSR counter every specified seconds.
-  /// \arg ReadValues The reference to the vector to which to save the values
-  /// \arg ReadValuesMutex The reference to the mutex that is used to lock acces to ReadValues
-  /// \arg StopThread The reference to the mutex that is used to terminate the thread function.
-  static void threadFunction(std::chrono::milliseconds SleepTime,
-                             std::vector<std::vector<firestarter::measurement::TimeValue>>& ReadValues,
-                             std::mutex& ReadValuesMutex, std::atomic<bool>& StopThread);
+  ~UncoreFrequencyReader() {
+    StopThread = true;
+    ReaderThread.join();
+  }
 
   /// Read the summary of measured uncore frequencies between two timepoints.
   /// \arg StartTime The time after which to start reading the values
   /// \arg StopTime The time after which to stop reading the values
   /// \returns The summary of the measured uncore frequency per socket.
-  auto
-  getSummary(std::chrono::high_resolution_clock::time_point StartTime,
-             std::chrono::high_resolution_clock::time_point StopTime) -> std::vector<firestarter::measurement::Summary>;
+  auto getSummary(std::chrono::high_resolution_clock::time_point StartTime,
+                  std::chrono::high_resolution_clock::time_point StopTime)
+      -> std::vector<firestarter::measurement::Summary> {
+    std::vector<firestarter::measurement::Summary> Summaries;
+
+    auto FindAll = [&StartTime, &StopTime](auto const& Tv) { return StartTime <= Tv.Time && Tv.Time <= StopTime; };
+
+    decltype(ReadValues) CroppedValues(ReadValues.size());
+
+    {
+      const std::lock_guard Lk(ReadValuesMutex);
+
+      for (auto I = 0; I < ReadValues.size(); I++) {
+        std::copy_if(ReadValues[I].cbegin(), ReadValues[I].cend(), std::back_inserter(CroppedValues[I]), FindAll);
+      }
+    }
+
+    MetricType Metric{};
+    Metric.Absolute = 1;
+
+    for (auto& CroppedValue : CroppedValues) {
+      Summaries.emplace_back(firestarter::measurement::Summary::calculate(CroppedValue.begin(), CroppedValue.end(),
+                                                                          /*MetricType=*/Metric, /*NumThreads=*/0));
+    }
+
+    return Summaries;
+  };
 
 private:
   /// The thread that executes the reading
@@ -56,5 +73,7 @@ private:
   /// Atomic to stop the threads execution
   std::atomic<bool> StopThread = false;
 };
+
+using UncoreFrequencyPcmReader = UncoreFrequencyReader<UncoreFrequencyReaderPcmFunction>;
 
 } // namespace intel_uncore_freq_dumper
