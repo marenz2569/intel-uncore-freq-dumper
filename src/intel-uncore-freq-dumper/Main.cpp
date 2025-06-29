@@ -1,6 +1,5 @@
 #include "intel-uncore-freq-dumper/Config.hpp"
 #include "intel-uncore-freq-dumper/UncoreFrequencyReader.hpp"
-#include "intel-uncore-freq-dumper/UncoreFrequencyReaderPcmFunction.hpp"
 
 #include <chrono>
 #include <cstdlib>
@@ -8,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <variant>
 
 auto main(int Argc, const char** Argv) -> int {
   std::cout << "intel-uncore-freq-dumper. Version " << _INTEL_UNCORE_FREQ_DUMPER_VERSION_STRING << "\n"
@@ -16,18 +16,29 @@ auto main(int Argc, const char** Argv) -> int {
   try {
     const intel_uncore_freq_dumper::Config Cfg{Argc, Argv};
 
-    intel_uncore_freq_dumper::UncoreFrequencyPcmReader Reader(Cfg.MeasurementInterval);
+    std::variant<std::unique_ptr<intel_uncore_freq_dumper::UncoreFrequencyPcmReader>,
+                 std::unique_ptr<intel_uncore_freq_dumper::UncoreFrequencySysfsReader>>
+        Reader;
+
+    if (Cfg.UseSysfs) {
+      Reader = std::make_unique<intel_uncore_freq_dumper::UncoreFrequencySysfsReader>(Cfg.MeasurementInterval);
+    } else {
+      Reader = std::make_unique<intel_uncore_freq_dumper::UncoreFrequencyPcmReader>(Cfg.MeasurementInterval);
+    }
 
     // Wait for the measurement to finish
     auto StartTime = std::chrono::high_resolution_clock::now();
     std::this_thread::sleep_for(Cfg.MeasurementDuration);
     auto StopTime = std::chrono::high_resolution_clock::now();
 
-    auto Summaries = Reader.getSummary(StartTime + Cfg.StartDelta, StopTime - Cfg.StopDelta);
+    auto Summaries = std::visit(
+        [&](auto&& Arg) -> auto { return Arg->getSummary(StartTime + Cfg.StartDelta, StopTime - Cfg.StopDelta); },
+        Reader);
 
     std::ofstream OutfileStream(Cfg.OutfilePath);
 
     OutfileStream << "socket,num_timepoints,duration_ms,average,stddev\n";
+    // TODO: move socket description to name, use map instead of vector in vector
     for (auto I = 0; I < Summaries.size(); I++) {
       OutfileStream << I << "," << Summaries[I].NumTimepoints << "," << Summaries[I].Duration.count() << ","
                     << Summaries[I].Average << "," << Summaries[I].Stddev << "\n";

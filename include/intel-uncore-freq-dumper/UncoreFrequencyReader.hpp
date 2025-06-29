@@ -2,6 +2,7 @@
 
 #include "firestarter/Measurement/Summary.hpp"
 #include "intel-uncore-freq-dumper/UncoreFrequencyReaderPcmFunction.hpp"
+#include "intel-uncore-freq-dumper/UncoreFrequencyReaderSysfsFunction.hpp"
 #include <atomic>
 #include <chrono>
 #include <cpucounters.h>
@@ -75,5 +76,6 @@ private:
 };
 
 using UncoreFrequencyPcmReader = UncoreFrequencyReader<UncoreFrequencyReaderPcmFunction>;
+using UncoreFrequencySysfsReader = UncoreFrequencyReader<UncoreFrequencyReaderSysfsFunction>;
 
 } // namespace intel_uncore_freq_dumper

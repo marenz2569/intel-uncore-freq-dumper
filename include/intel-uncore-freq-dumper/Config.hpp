@@ -24,6 +24,9 @@ struct Config {
   /// The path where the output should be saved.
   std::string OutfilePath;
 
+  /// Use sysfs or pcm
+  bool UseSysfs;
+
   Config() = delete;
 
   /// Parser the config from the command line argumens.

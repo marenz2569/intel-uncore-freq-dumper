@@ -25,6 +25,7 @@ Config::Config(int Argc, const char** Argv)
     ("stop-delta", "Cut of last N milliseconds of measurement",
       cxxopts::value<unsigned>()->default_value("2000"), "N")
     ("outfile", "The path where the results should be saved to.", cxxopts::value<std::string>()->default_value("outfile.csv"))
+    ("use-sysfs", "Use sysfs or intel pcm for reading the metric.", cxxopts::value<bool>()->default_value("true"))
   ;
   // clang-format on
 
@@ -36,6 +37,7 @@ Config::Config(int Argc, const char** Argv)
     StartDelta = std::chrono::milliseconds(Options["start-delta"].as<unsigned>());
     StopDelta = std::chrono::milliseconds(Options["stop-delta"].as<unsigned>());
     OutfilePath = Options["outfile"].as<std::string>();
+    UseSysfs = Options["use-sysfs"].as<bool>();
   } catch (std::exception& E) {
     std::cerr << Parser.help() << "\n";
     std::cerr << "\n";
