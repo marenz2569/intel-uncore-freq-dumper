@@ -20,4 +20,6 @@ Usage:
                                 (default: 2000)
       --outfile arg             The path where the results should be saved 
                                 to. (default: outfile.csv)
+      --use-sysfs               Use sysfs or intel pcm for reading the 
+                                metric. (default: false)
 ```

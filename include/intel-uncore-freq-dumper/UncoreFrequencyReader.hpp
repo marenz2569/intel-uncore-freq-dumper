@@ -43,21 +43,22 @@ public:
 
     auto FindAll = [&StartTime, &StopTime](auto const& Tv) { return StartTime <= Tv.Time && Tv.Time <= StopTime; };
 
-    decltype(ReadValues) CroppedValues(ReadValues.size());
+    decltype(ReadValues) CroppedValues;
 
     {
       const std::lock_guard Lk(ReadValuesMutex);
 
       for (const auto& [Name, Values] : ReadValues) {
-        std::copy_if(Values.cbegin(), Values.cend(), std::inserter(CroppedValues[Name]), FindAll);
+        auto& Result = CroppedValues[Name];
+        std::copy_if(Values.begin(), Values.end(), std::back_inserter(Result), FindAll);
       }
     }
 
     MetricType Metric{};
     Metric.Absolute = 1;
 
-    for (const auto& [Name, Values] : CroppedValues) {
-      Summaries.emplace(Name, firestarter::measurement::Summary::calculate(Values.cbegin(), Values.cend(),
+    for (auto& [Name, Values] : CroppedValues) {
+      Summaries.emplace(Name, firestarter::measurement::Summary::calculate(Values.begin(), Values.end(),
                                                                            /*MetricType=*/Metric, /*NumThreads=*/0));
     }
 
