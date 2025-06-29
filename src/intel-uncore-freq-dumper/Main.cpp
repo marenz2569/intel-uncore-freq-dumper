@@ -37,11 +37,10 @@ auto main(int Argc, const char** Argv) -> int {
 
     std::ofstream OutfileStream(Cfg.OutfilePath);
 
-    OutfileStream << "socket,num_timepoints,duration_ms,average,stddev\n";
-    // TODO: move socket description to name, use map instead of vector in vector
-    for (auto I = 0; I < Summaries.size(); I++) {
-      OutfileStream << I << "," << Summaries[I].NumTimepoints << "," << Summaries[I].Duration.count() << ","
-                    << Summaries[I].Average << "," << Summaries[I].Stddev << "\n";
+    OutfileStream << "name,num_timepoints,duration_ms,average,stddev\n";
+    for (const auto& [Name, Summary] : Summaries) {
+      OutfileStream << Name << "," << Summary.NumTimepoints << "," << Summary.Duration.count() << "," << Summary.Average
+                    << "," << Summary.Stddev << "\n";
     }
   } catch (std::exception const& E) {
     std::cerr << E.what();

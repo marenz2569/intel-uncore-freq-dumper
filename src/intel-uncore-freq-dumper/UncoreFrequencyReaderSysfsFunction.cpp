@@ -5,13 +5,10 @@
 #include <chrono>
 #include <cpucounters.h>
 #include <filesystem>
-#include <firestarter/Measurement/MetricInterface.h>
-#include <firestarter/Measurement/Summary.hpp>
-#include <firestarter/Measurement/TimeValue.hpp>
 #include <fstream>
 #include <mutex>
 #include <thread>
-#include <utility>
+#include <unordered_map>
 #include <vector>
 
 namespace intel_uncore_freq_dumper {
@@ -28,11 +25,11 @@ auto UncoreFrequencyReaderSysfsFunction::readSysfsValue(const std::filesystem::p
 
 void UncoreFrequencyReaderSysfsFunction::threadFunction(
     const std::chrono::milliseconds SleepTime,
-    std::vector<std::vector<firestarter::measurement::TimeValue>>& ReadValues, std::mutex& ReadValuesMutex,
-    std::atomic<bool>& StopThread) {
+    std::unordered_map<std::string, std::vector<firestarter::measurement::TimeValue>>& ReadValues,
+    std::mutex& ReadValuesMutex, std::atomic<bool>& StopThread) {
 
   // Map from entry name to frequency file
-  std::map<std::string, std::filesystem::path> FrequencyPaths;
+  std::unordered_map<std::string, std::filesystem::path> FrequencyPaths;
 
   std::ranges::for_each(std::filesystem::recursive_directory_iterator{UncoreFrequencyReaderSysfsFunction::SysfsPath},
                         [&](const auto& Entry) {

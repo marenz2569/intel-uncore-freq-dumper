@@ -7,6 +7,8 @@
 #include <chrono>
 #include <cpucounters.h>
 #include <firestarter/Measurement/TimeValue.hpp>
+#include <iterator>
+#include <unordered_map>
 #include <vector>
 
 namespace intel_uncore_freq_dumper {
@@ -36,8 +38,8 @@ public:
   /// \returns The summary of the measured uncore frequency per socket.
   auto getSummary(std::chrono::high_resolution_clock::time_point StartTime,
                   std::chrono::high_resolution_clock::time_point StopTime)
-      -> std::vector<firestarter::measurement::Summary> {
-    std::vector<firestarter::measurement::Summary> Summaries;
+      -> std::unordered_map<std::string, firestarter::measurement::Summary> {
+    std::unordered_map<std::string, firestarter::measurement::Summary> Summaries;
 
     auto FindAll = [&StartTime, &StopTime](auto const& Tv) { return StartTime <= Tv.Time && Tv.Time <= StopTime; };
 
@@ -46,17 +48,17 @@ public:
     {
       const std::lock_guard Lk(ReadValuesMutex);
 
-      for (auto I = 0; I < ReadValues.size(); I++) {
-        std::copy_if(ReadValues[I].cbegin(), ReadValues[I].cend(), std::back_inserter(CroppedValues[I]), FindAll);
+      for (const auto& [Name, Values] : ReadValues) {
+        std::copy_if(Values.cbegin(), Values.cend(), std::inserter(CroppedValues[Name]), FindAll);
       }
     }
 
     MetricType Metric{};
     Metric.Absolute = 1;
 
-    for (auto& CroppedValue : CroppedValues) {
-      Summaries.emplace_back(firestarter::measurement::Summary::calculate(CroppedValue.begin(), CroppedValue.end(),
-                                                                          /*MetricType=*/Metric, /*NumThreads=*/0));
+    for (const auto& [Name, Values] : CroppedValues) {
+      Summaries.emplace(Name, firestarter::measurement::Summary::calculate(Values.cbegin(), Values.cend(),
+                                                                           /*MetricType=*/Metric, /*NumThreads=*/0));
     }
 
     return Summaries;
@@ -65,10 +67,8 @@ public:
 private:
   /// The thread that executes the reading
   std::thread ReaderThread;
-  /// The vector that holds the vector measurement values for each socket. The vector of measurement values contains the
-  /// timepoint of the end of the measurement duration and the average uncore frequency in GHz during the measurement
-  /// duration.
-  std::vector<std::vector<firestarter::measurement::TimeValue>> ReadValues;
+  /// The map from the metric name to the vector of read time values.
+  std::unordered_map<std::string, std::vector<firestarter::measurement::TimeValue>> ReadValues;
   /// Mutex to access ReadValues
   std::mutex ReadValuesMutex;
   /// Atomic to stop the threads execution

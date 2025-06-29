@@ -16,9 +16,10 @@ struct UncoreFrequencyReaderFunction {
   /// \arg ReadValues The reference to the vector to which to save the values
   /// \arg ReadValuesMutex The reference to the mutex that is used to lock acces to ReadValues
   /// \arg StopThread The reference to the mutex that is used to terminate the thread function.
-  static void threadFunction(std::chrono::milliseconds SleepTime,
-                             std::vector<std::vector<firestarter::measurement::TimeValue>>& ReadValues,
-                             std::mutex& ReadValuesMutex, std::atomic<bool>& StopThread);
+  static void
+  threadFunction(std::chrono::milliseconds SleepTime,
+                 std::unordered_map<std::string, std::vector<firestarter::measurement::TimeValue>>& ReadValues,
+                 std::mutex& ReadValuesMutex, std::atomic<bool>& StopThread);
 };
 
 } // namespace intel_uncore_freq_dumper

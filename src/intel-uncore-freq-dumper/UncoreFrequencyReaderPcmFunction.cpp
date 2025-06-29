@@ -4,10 +4,8 @@
 #include <atomic>
 #include <chrono>
 #include <cpucounters.h>
-#include <firestarter/Measurement/MetricInterface.h>
-#include <firestarter/Measurement/Summary.hpp>
-#include <firestarter/Measurement/TimeValue.hpp>
 #include <mutex>
+#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -23,8 +21,8 @@ void UncoreFrequencyReaderPcmFunction::readServerUncoreCounterState(
 
 void UncoreFrequencyReaderPcmFunction::threadFunction(
     const std::chrono::milliseconds SleepTime,
-    std::vector<std::vector<firestarter::measurement::TimeValue>>& ReadValues, std::mutex& ReadValuesMutex,
-    std::atomic<bool>& StopThread) {
+    std::unordered_map<std::string, std::vector<firestarter::measurement::TimeValue>>& ReadValues,
+    std::mutex& ReadValuesMutex, std::atomic<bool>& StopThread) {
   auto& Pcm = *pcm::PCM::getInstance();
   // Programm the counters
   Pcm.checkError(Pcm.program());
@@ -34,8 +32,6 @@ void UncoreFrequencyReaderPcmFunction::threadFunction(
       static_cast<double>(Pcm.getNumOnlineSockets()) / static_cast<double>(Pcm.getNumOnlineCores());
 
   // Set the size of the values vector to the number of sockets.
-  ReadValues.resize(NumSockets);
-
   std::vector<pcm::ServerUncoreCounterState> BeforeState(NumSockets);
   std::vector<pcm::ServerUncoreCounterState> AfterState(NumSockets);
 
@@ -50,9 +46,11 @@ void UncoreFrequencyReaderPcmFunction::threadFunction(
       const std::lock_guard Lk(ReadValuesMutex);
 
       for (auto Socket = 0; Socket < NumSockets; Socket++) {
-        ReadValues[Socket].emplace_back(std::chrono::system_clock::now(),
-                                        getAverageUncoreFrequency(BeforeState[Socket], AfterState[Socket]) *
-                                            UncoreFreqFactor / 1e9);
+        const auto SocketName = "socket-" + std::to_string(Socket);
+
+        ReadValues[SocketName].emplace_back(std::chrono::system_clock::now(),
+                                            getAverageUncoreFrequency(BeforeState[Socket], AfterState[Socket]) *
+                                                UncoreFreqFactor / 1e9);
       }
     }
 
