@@ -3,10 +3,13 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
-#include <cpucounters.h>
 #include <filesystem>
+#include <firestarter/Measurement/TimeValue.hpp>
 #include <fstream>
+#include <ios>
+#include <iostream>
 #include <mutex>
+#include <string>
 #include <thread>
 #include <unordered_map>
 #include <vector>

@@ -4,9 +4,11 @@
 #include <atomic>
 #include <chrono>
 #include <cpucounters.h>
+#include <firestarter/Measurement/TimeValue.hpp>
 #include <mutex>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 

@@ -6,6 +6,7 @@
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <thread>
 #include <variant>
 
