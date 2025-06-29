@@ -13,7 +13,7 @@ struct UncoreFrequencyReaderFunction {
   /// The thread function that periodically read the uncore counters and save the uncore frequency to the ReadValues
   /// vector.
   /// \arg SleepTime Read the frequency MSR counter every specified seconds.
-  /// \arg ReadValues The reference to the vector to which to save the values
+  /// \arg ReadValues The reference to the map from the metric name to the vector of read time values.
   /// \arg ReadValuesMutex The reference to the mutex that is used to lock acces to ReadValues
   /// \arg StopThread The reference to the mutex that is used to terminate the thread function.
   static void
