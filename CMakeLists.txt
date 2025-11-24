@@ -53,6 +53,13 @@ if(NOT DEFINED ASMJIT_STATIC)
 	set(ASMJIT_STATIC TRUE)
 endif()
 
+# FIRESTARTER binaries get build all the time, but static libraries are not present all the time.
+# Therefore we disable the static build.
+# These lines can be removed once the issue is resolved: https://github.com/tud-zih-energy/FIRESTARTER/issues/116
+if(NOT DEFINED FIRESTARTER_LINK_STATIC)
+	set(FIRESTARTER_LINK_STATIC OFF)
+endif()
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
